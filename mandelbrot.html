@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebGL</title>
+
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        precision mediump float;
+        attribute vec4 vPosition;
+        varying vec4 fColor;
+        uniform mat4 mScale;
+        uniform mat4 mTrans;
+        
+        void main(){
+            gl_Position = vPosition;
+            fColor = mScale * mTrans * vPosition;
+        }
+    </script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+        varying vec4 fColor;
+        uniform float zoom;
+        //uniform float offx;
+        //uniform float offy;
+        uniform int maxIter;
+        uniform vec2 kVal;
+        uniform bool mandel;
+        uniform bool nonTransform;
+        uniform float colorOffset;
+        uniform float aspect;
+        uniform vec3 colors[12];
+        uniform int numColors;
+        uniform float colorDensity;
+        
+        vec2 fn(vec2 z, vec2 c){
+            vec2 x = vec2(0.0,0.0);
+            
+            x.x = z.x * z.x - z.y * z.y;
+            x.y = z.x * z.y * 2.0;
+            
+            x.x += c.x;
+            x.y += c.y;
+            
+            return x;
+        }
+        
+        float getIterations(vec2 c){
+            vec2 z = c;
+            
+            if(mandel){
+                if (pow(c.x + 1.0, 2.0) + pow(c.y, 2.0) < .0625)
+                {
+                    return 0.0;
+                }
+                if (pow(c.x + .25, 2.0) + pow(c.y, 2.0) < .25)
+                {
+                    return 0.0;
+                }
+                if (pow(c.x + 1.3, 2.0) + pow(c.y, 2.0) < .0025)
+                {
+                    return 0.0;
+                }
+            }
+            else
+                c = kVal;
+            
+            int iter = 0;
+            for(int i = 1; i <= 10000; i++){
+                z = fn(z, c);
+                if(z.x * z.x + z.y * z.y >= 4.0){
+                    iter = i;
+                    break;
+                }
+                if(i >= maxIter) return 0.0;
+            }
+                for(int i = 0; i < 3; i++){
+                    z = fn(z, c);
+                    iter++;
+                }
+                
+            return colorOffset + colorDensity * float(numColors) * (float(iter) + 1.0 - log2(log(z.x * z.x + z.y * z.y) / 2.0)) / float(maxIter);
+        }
+
+        void main(){
+            vec4 color = fColor;
+            if(nonTransform){
+                color = vec4(1.0,1.0,1.0,1.0);
+            }
+            else{
+                float r,g,b;
+                float iter = getIterations(color.xy);
+                
+                if(iter == 0.0)
+                {
+                    r = g = b = 0.0;
+                }
+				else{
+					int index1 = int(floor(iter));
+					float t2 = iter - float(index1);
+					float t1 = 1.0 - t2;
+					index1 = int(mod(float(index1), float(numColors)));
+					int index2 = int(mod(float(index1 + 1), float(numColors)));
+					
+                    float r1, g1, b1;
+                    r1 = g1 = b1 = 0.0;
+                    
+                    if(index1 == 0)
+                    {                    
+                        r1 = colors[0].r;
+                        g1 = colors[0].g;
+                        b1 = colors[0].b;
+                    }                    
+                    else if (index1 == 1)
+                    {                    
+                        r1 = colors[1].r;
+                        g1 = colors[1].g;
+                        b1 = colors[1].b;
+                    }
+                    else if (index1 == 2)
+                    {                    
+                        r1 = colors[2].r;
+                        g1 = colors[2].g;
+                        b1 = colors[2].b;
+                    }
+                    else if (index1 == 3)
+                    {                    
+                        r1 = colors[3].r;
+                        g1 = colors[3].g;
+                        b1 = colors[3].b;
+                    }
+                    else if (index1 == 4)
+                    {                    
+                        r1 = colors[4].r;
+                        g1 = colors[4].g;
+                        b1 = colors[4].b;
+                    }
+                    else if (index1 == 5)
+                    {                    
+                        r1 = colors[5].r;
+                        g1 = colors[5].g;
+                        b1 = colors[5].b;
+                    }
+                    else if (index1 == 6)
+                    {                    
+                        r1 = colors[6].r;
+                        g1 = colors[6].g;
+                        b1 = colors[6].b;
+                    }
+                    else if (index1 == 7)
+                    {                    
+                        r1 = colors[7].r;
+                        g1 = colors[7].g;
+                        b1 = colors[7].b;
+                    }
+                    else if (index1 == 8)
+                    {                    
+                        r1 = colors[8].r;
+                        g1 = colors[8].g;
+                        b1 = colors[8].b;
+                    }
+                    else if (index1 == 9)
+                    {                    
+                        r1 = colors[9].r;
+                        g1 = colors[9].g;
+                        b1 = colors[9].b;
+                    }
+                    else if (index1 == 10)
+                    {                    
+                        r1 = colors[10].r;
+                        g1 = colors[10].g;
+                        b1 = colors[10].b;
+                    }
+                    else if (index1 == 11)
+                    {                    
+                        r1 = colors[11].r;
+                        g1 = colors[11].g;
+                        b1 = colors[11].b;
+                    }
+                    
+                    float r2, g2, b2;
+                    r2 = g2 = b2 = 0.0;
+                    
+                    if(index2 == 0)
+                    {                    
+                        r2 = colors[0].r;
+                        g2 = colors[0].g;
+                        b2 = colors[0].b;
+                    }                    
+                    else if (index2 == 1)
+                    {                    
+                        r2 = colors[1].r;
+                        g2 = colors[1].g;
+                        b2 = colors[1].b;
+                    }
+                    else if (index2 == 2)
+                    {                    
+                        r2 = colors[2].r;
+                        g2 = colors[2].g;
+                        b2 = colors[2].b;
+                    }
+                    else if (index2 == 3)
+                    {                    
+                        r2 = colors[3].r;
+                        g2 = colors[3].g;
+                        b2 = colors[3].b;
+                    }
+                    else if (index2 == 4)
+                    {                    
+                        r2 = colors[4].r;
+                        g2 = colors[4].g;
+                        b2 = colors[4].b;
+                    }
+                    else if (index2 == 5)
+                    {                    
+                        r2 = colors[5].r;
+                        g2 = colors[5].g;
+                        b2 = colors[5].b;
+                    }
+                    else if (index2 == 6)
+                    {                    
+                        r2 = colors[6].r;
+                        g2 = colors[6].g;
+                        b2 = colors[6].b;
+                    }
+                    else if (index2 == 7)
+                    {                    
+                        r2 = colors[7].r;
+                        g2 = colors[7].g;
+                        b2 = colors[7].b;
+                    }
+                    else if (index2 == 8)
+                    {                    
+                        r2 = colors[8].r;
+                        g2 = colors[8].g;
+                        b2 = colors[8].b;
+                    }
+                    else if (index2 == 9)
+                    {                    
+                        r2 = colors[9].r;
+                        g2 = colors[9].g;
+                        b2 = colors[9].b;
+                    }
+                    else if (index2 == 10)
+                    {                    
+                        r2 = colors[10].r;
+                        g2 = colors[10].g;
+                        b2 = colors[10].b;
+                    }
+                    else if (index2 == 11)
+                    {                    
+                        r2 = colors[11].r;
+                        g2 = colors[11].g;
+                        b2 = colors[11].b;
+                    }
+                    
+                    r = (r1 * t1 + r2 * t2);
+                    g = (g1 * t1 + g2 * t2);
+                    b = (b1 * t1 + b2 * t2);
+				}
+                color = vec4(r, g, b, 1.0);
+            }
+            gl_FragColor = color;
+        }
+    </script>
+
+    <script type="text/javascript" src="webgl-utils.js"></script>
+
+    <script type="text/javascript" src="initShaders.js"></script>
+
+    <script type="text/javascript" src="MV.js"></script>
+
+    <script type="text/javascript" src="mandelbrot.js"></script>
+    
+    <style>
+        #options
+        {
+	        //position:fixed;
+	        display:inline-block;
+	        padding: 6px 6px 6px 6px;
+	        background-color:#b8b894;
+            top:0px;
+            bottom:0px;
+            left:0px;
+            width:250px;
+            //overflow-y:auto;
+        }
+        #left{            
+	        position:fixed;
+	        display:inline-block;
+	        background-color:#b8b894;
+            top:0px;
+            bottom:0px;
+            left:0px;
+            width:280px;
+            overflow-y:scroll;
+        }
+        #right{            
+	        position:fixed;
+	        display:inline-block;
+	        background-color:#161616;
+            right:0px;
+            bottom:0px;
+            top:0px;
+            width:4px;
+            cursor:e-resize;
+            z-index:1;
+        }
+        #bottom{            
+	        position:fixed;
+	        display:inline-block;
+	        background-color:#161616;
+            bottom:0px;
+            left:281px;
+            right:0px;
+            height:4px;
+            cursor:n-resize;
+            z-index:1;
+        }
+        canvas
+        {
+            top:0px;
+            position:fixed;
+            left:281px;
+        }
+        canvas:hover
+        {
+            cursor:default;
+        }
+        legend{
+            font-weight:bold;
+        }
+
+        fieldset
+        {
+            background-color:#c1c1a4;
+        }
+
+        .subfield{
+            border: 1px dotted gray;
+            border-left: 2px solid gray;
+        }
+        fieldset > input{
+            margin: 0px 0px 0px 0px;
+        }
+        
+        input
+        {
+            margin-bottom:2px;
+            margin-top:4px;
+        }
+        
+        .optiondivs
+        {
+            border-left: 2px solid gray;
+            border-top: 1px dotted gray;
+            margin-bottom:6px;
+            padding: 2px 2px 2px 2px;
+        }
+        
+        #overlayBL
+        {
+            position:absolute;
+            bottom:0px;
+            left:267px;
+            color:White;
+            visibility:hidden;
+        }
+        table
+        {
+            position:relative;
+            display:inline-block;
+            margin:auto;
+            border:1px solid gray;
+            background-color:#cbcbb3;
+        }
+        td
+        {
+            border:1px solid gray;
+            padding:0px;
+            margin:0px;
+        }
+        .colors
+        {
+            height:14px;
+            width:40px;
+            padding:0px;
+            margin:0px;
+        }
+    </style>
+</head>
+<body style="background-color: black;">
+    <div id="left">
+        <div id="options"><form method="get">
+            <fieldset>
+                <legend>General</legend>
+                <div class="optiondivs">
+                    <input type="radio" name="set" id="mandel" value="mandel"checked>Mandelbrot</input>
+                    <input type="radio" name="set" id="julia" value="julia">Julia</input><br />
+                </div>
+                <div class="optiondivs">
+                    <input type="checkbox" id="alwayslowres" name="alwayslowres" checked>Always Low-Res</input><br />
+                    Low-res type:<input type="radio" name="lowres" id="lowres1" value="lowres1">1</input>
+                    <input type="radio" name="lowres" id="lowres2" value="lowres2" >2</input>
+                    <input type="radio" name="lowres" id="lowres3" value="lowres3" checked >3</input>
+                </div>
+                <div class="optiondivs">
+                    Max iterations: <input type="number" style="width:50px" name="maxiter" id="maxiter" max="10000" min="1" value="500" onchange="updateData()" />
+                </div>
+            </fieldset>
+            <fieldset id="juliaSettings">
+                <legend>Julia Settings</legend>
+                <input style="margin-bottom:3px;" type="button" id="selectRot" value="Select Animation Rotation" /><br />
+                <div class="optiondivs">
+                    Point: <input style="width:60px" type="number" id="rotPointA" name="rotPointA" value="-1.0" step="any" oninput="updateData()" /> +
+                    <input style="width:60px" type="number" id="rotPointB" name="rotPointB" value="0.0" step="any" oninput="updateData()" /> i<br />
+                    Radius: <input style="width:100px" type="number" id="rotRadius" name="rotRadius" value="0.251" step="any" oninput="updateData()" /><br />
+                    Angle: <input style="width:50px" type="number" id="rotTheta" name="rotTheta" value="0.0" step="any" oninput="updateData()" /><br />
+                    Increment: <input style="width:60px" type="number" id="rotIncrmt" name="rotIncrmt" value="0.05" step="any" oninput="updateData()" /><br />
+                </div>
+            </fieldset>
+            <fieldset id="mandelSettings">
+                <legend>Mandelbrot Settings</legend>
+                <div class="optiondivs">
+                    Center Point: <input style="width:40px" type="number" id="centerPointA" name="centerPointA" value="-.3" step="any" oninput="updateData()" /> +
+                    <input style="width:40px" type="number" id="centerPointB" name="centerPointB" value="0.0" step="any" oninput="updateData()" /> i<br />
+                    Scale: <input style="width:100px" type="number" id="zoomAmt" name="zoomAmt" value="1" step="any" oninput="updateData()" /><br />
+                </div>
+            </fieldset>
+            <!--fieldset>
+                <legend>Mandelbrot Settings</legend>
+                Upper Left: <input style="width:60px" type="number" id="Number1" value="-1.01" step="0.1" onchange="updateData()" /> +
+                <input style="width:60px" type="number" id="Number2" value="0.0" step="0.1" onchange="updateData()" /> i<br />
+                Lower Right: <input style="width:60px" type="number" id="Number3" value="-1.01" step="0.1" onchange="updateData()" /> +
+                <input style="width:60px" type="number" id="Number4" value="0.0" step="0.1" onchange="updateData()" /> i<br />
+            </fieldset-->
+            <fieldset>
+                <legend>Animation</legend>
+                <input style="width:80px;" type="button" id="animate" name="animate" value="Animate" />
+                <fieldset class="subfield">
+                    <legend>Framerate</legend>
+                    <input type="range" style="width: 162px" id="framerate" name="framerate" min="1" max="100" value="100" onchange="updateData()" /><span style="font-size:x-small;">144hz</span>
+                </fieldset>
+                <fieldset class="subfield">
+                    <legend>Color Increment</legend>
+                    <input type="range" style="width: 100%" id="colorIncrmt" name="colorIncrmt" min="0" max="100" value="20" oninput="updateData()" />
+                </fieldset>
+                <fieldset class="subfield">
+                    <legend>Color Density</legend>
+                    <input type="range" style="width: 100%" id="colorDensity" name="colorDensity" min="0" max="100" value="20" oninput="updateData()" />
+                </fieldset>
+            </fieldset>
+            <fieldset>
+                <legend>Colors</legend>
+                <div style="margin-left:10px">
+                <table>
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th style="border-right:1px solid black; border-left:1px solid black;">Use</th>
+                        <th>Color</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td><input type="checkbox" id="cb1" name="cb1" onchange="updateData();"/></td>
+                        <td><input class="colors" type="color" id="c1" name="c1" value="#ff0000" onchange="updateData();"/></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td><input type="checkbox" id="cb2" name="cb2" onchange="updateData();"/></td>
+                        <td><input class="colors" type="color" id="c2" name="c2" value="#ffff00" onchange="updateData();"/></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td><input type="checkbox" id="cb3" name="cb3" onchange="updateData();"/></td>
+                        <td><input class="colors" type="color" id="c3" name="c3" value="#00ff00" onchange="updateData();"/></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td><input type="checkbox" id="cb4" name="cb4" onchange="updateData();"/></td>
+                        <td><input class="colors" type="color" id="c4" name="c4" value="#00ffff" onchange="updateData();"/></td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td><input type="checkbox" id="cb5" name="cb5" onchange="updateData();"/></td>
+                        <td><input class="colors" type="color" id="c5" name="c5" value="#0000ff" onchange="updateData();"/></td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td><input type="checkbox" id="cb6" name="cb6" onchange="updateData();"/></td>
+                        <td><input class="colors" type="color" id="c6" name="c6" value="#ff00ff" onchange="updateData();"/></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th style="border-right:1px solid black; border-left:1px solid black;">Use</th>
+                            <th>Color</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>7</td>
+                            <td><input type="checkbox" id="cb7" id="cb7" onchange="updateData();" /></td>
+                            <td><input class="colors" type="color" id="c7" name="c7" value="#ff0000" onchange="updateData();" /></td>
+                        </tr>
+                        <tr>
+                            <td>8</td>
+                            <td><input type="checkbox" id="cb8" id="cb8" onchange="updateData();" /></td>
+                            <td><input class="colors" type="color" id="c8" name="c8" value="#ffff00" onchange="updateData();" /></td>
+                        </tr>
+                        <tr>
+                            <td>9</td>
+                            <td><input type="checkbox" id="cb9" id="cb9" onchange="updateData();" /></td>
+                            <td><input class="colors" type="color" id="c9" name="c9" value="#00ff00" onchange="updateData();" /></td>
+                        </tr>
+                        <tr>
+                            <td>10</td>
+                            <td><input type="checkbox" id="cb10" id="cb10" onchange="updateData();" /></td>
+                            <td><input class="colors" type="color" id="c10" name="c10" value="#00ffff" onchange="updateData();" /></td>
+                        </tr>
+                        <tr>
+                            <td>11</td>
+                            <td><input type="checkbox" id="cb11" id="cb11" onchange="updateData();" /></td>
+                            <td><input class="colors" type="color" id="c11" name="c11" value="#0000ff" onchange="updateData();" /></td>
+                        </tr>
+                        <tr>
+                            <td>12</td>
+                            <td><input type="checkbox" id="cb12" name="cb12" onchange="updateData();" /></td>
+                            <td><input class="colors" type="color" id="c12" name="c12" value="#ff00ff" onchange="updateData();" /></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <input type="checkbox" id="wrapcolors" name="wrapcolors" onchange="updateData();" checked>Wrap Colors</input><br />
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>Misc</legend>
+                <button type="submit" onclick="submitForm();">Save to URL</button>
+            </fieldset>
+            <input  style="visibility:hidden; height:0px; width:0px; position:fixed;" type="number" value="4" id="rightWidth" name="rightWidth"/>
+            <input  style="visibility:hidden; height:0px; width:0px; position:fixed;" type="number" value="4" id="bottomHeight" name="bottomHeight"/>
+        </form></div>
+    </div>
+    <canvas id="gl-canvas" height="860" width="860" oncontextmenu="return false;">Oops ... your browser doesn't support the HTML5 canvas element</canvas>
+    <!--div id="overlayBL">Theta: <span id="theta"></span> deg</div-->
+    <div id="right"></div>
+    <div id="bottom"></div>
+</body>
+</html>
